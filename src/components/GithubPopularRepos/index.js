@@ -14,7 +14,6 @@ const languageFiltersData = [
 ]
 
 // Write your code here
-const apiUrl = 'https://assets.ccbp.in/popular-repos'
 
 class GithubPopularRepos extends Component {
   state = {
@@ -28,7 +27,7 @@ class GithubPopularRepos extends Component {
   }
 
   getRepository = async () => {
-    const response = await fetch(`${apiUrl}`)
+    const response = await fetch('https://assets.ccbp.in/popular-repos')
     const data = await response.json()
 
     const updatedData = data.popular_repos.map(each => ({
