@@ -27,7 +27,7 @@ class GithubPopularRepos extends Component {
   }
 
   getRepository = async () => {
-    const response = await fetch('https://assets.ccbp.in/popular-repos')
+    const response = await fetch('https://apis.ccbp.in/popular-repos')
     const data = await response.json()
 
     const updatedData = data.popular_repos.map(each => ({
