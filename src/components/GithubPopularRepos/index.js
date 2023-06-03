@@ -14,39 +14,55 @@ const languageFiltersData = [
 ]
 
 // Write your code here
+const apiUrl = 'https://apis.ccbp.in/popular-repos?language='
 
 class GithubPopularRepos extends Component {
   state = {
-    activeItemId: languageFiltersData[0].id,
-    repositoriesData: [],
     isLoading: true,
+    repositoriesData: [],
+    selectedLanguageFilter: 'ALL',
   }
 
   componentDidMount() {
-    this.getRepository()
+    this.getRepositories(languageFiltersData[0].id)
   }
 
-  getRepository = async () => {
-    const response = await fetch('https://apis.ccbp.in/popular-repos')
-    const data = await response.json()
+  setRepositories = (fetchedData, loadingStatus) => {
+    this.setState({
+      repositoriesData: fetchedData,
+      isLoading: loadingStatus,
+    })
+  }
 
-    const updatedData = data.popular_repos.map(each => ({
-      id: each.id,
-      name: each.name,
-      avatarUrl: each.avatar_url,
-      starsCount: each.stars_count,
-      forksCount: each.forks_count,
-      issuesCount: each.issues_count,
+  setIsLoading = loadingStatus => {
+    this.setState({isLoading: loadingStatus})
+  }
+
+  getRepositories = async selectedLanguageFilter => {
+    this.setIsLoading(true)
+    const response = await fetch(`${apiUrl}${selectedLanguageFilter}`)
+    const fetchedData = await response.json()
+    const updatedData = fetchedData.popular_repos.map(eachRepository => ({
+      id: eachRepository.id,
+      imageUrl: eachRepository.avatar_url,
+      name: eachRepository.name,
+      starsCount: eachRepository.stars_count,
+      forksCount: eachRepository.forks_count,
+      issuesCount: eachRepository.issues_count,
     }))
-    this.setState({repositoriesData: updatedData, isLoading: false})
+    this.setRepositories(updatedData, false)
   }
 
   renderRepositoriesList = () => {
     const {repositoriesData} = this.state
+
     return (
-      <ul className="repository-container">
-        {repositoriesData.map(eachData => (
-          <RepositoryItem key={eachData.id} repositoryItems={eachData} />
+      <ul className="repositories-cards-list-container">
+        {repositoriesData.map(repositoryData => (
+          <RepositoryItem
+            key={repositoryData.id}
+            repositoryData={repositoryData}
+          />
         ))}
       </ul>
     )
@@ -54,24 +70,28 @@ class GithubPopularRepos extends Component {
 
   renderLoader = () => (
     <div data-testid="loader">
-      <Loader type="ThreeDots" color="#0284c7" height={80} width={80} />
+      <Loader color="#0284c7" height={80} type="ThreeDots" width={80} />
     </div>
   )
 
-  updateActiveItemId = id => {
-    this.setState({activeItemId: id})
+  setSelectedLanguageFilterAndGetRepositories = newFilterId => {
+    this.setState({selectedLanguageFilter: newFilterId})
+    this.getRepositories(newFilterId)
   }
 
-  renderFilterLanguages = () => {
-    const {activeItemId} = this.state
+  renderLanguageFiltersList = () => {
+    const {selectedLanguageFilter} = this.state
+
     return (
-      <ul className="languages-container">
-        {languageFiltersData.map(each => (
+      <ul className="filters-list-container">
+        {languageFiltersData.map(eachLanguageFilter => (
           <LanguageFilterItem
-            key={each.id}
-            languages={each}
-            updateActiveItemId={this.updateActiveItemId}
-            isActive={each.id === activeItemId}
+            isSelected={eachLanguageFilter.id === selectedLanguageFilter}
+            key={eachLanguageFilter.id}
+            languageFilter={eachLanguageFilter}
+            setSelectedLanguageFilterAndGetRepositories={
+              this.setSelectedLanguageFilterAndGetRepositories
+            }
           />
         ))}
       </ul>
@@ -80,11 +100,14 @@ class GithubPopularRepos extends Component {
 
   render() {
     const {isLoading} = this.state
+
     return (
       <div className="app-container">
-        <h1 className="heading">Popular</h1>
-        {this.renderFilterLanguages()}
-        {isLoading ? this.renderLoader() : this.renderRepositoriesList()}
+        <div className="github-popular-repositories-container">
+          <h1 className="heading">Popular</h1>
+          {this.renderLanguageFiltersList()}
+          {isLoading ? this.renderLoader() : this.renderRepositoriesList()}
+        </div>
       </div>
     )
   }
